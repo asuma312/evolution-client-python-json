@@ -1,6 +1,6 @@
-from evolution.client import EvolutionClient
-from evolution.models.instance import InstanceConfig
-from evolution.models.message import TextMessage, MediaMessage, MediaType
+from evolutionapi.client import EvolutionClient
+from evolutionapi.models.instance import InstanceConfig
+from evolutionapi.models.message import TextMessage, MediaMessage, MediaType
 
 
 print("Iniciando cliente")

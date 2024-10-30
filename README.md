@@ -5,7 +5,7 @@ Client Python para interagir com a API Evolution.
 ## Instalação
 
 ```bash
-pip install evolution-client
+pip install evolution
 ```
 
 ## Uso Básico
