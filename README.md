@@ -156,3 +156,137 @@ mensagem = ListMessage(
 
 response = client.messages.send_list(instance_id, mensagem, instance_token)
 ```
+
+### Gerenciamento de Grupos
+
+#### Criar Grupo
+```python
+from evolution.models.group import CreateGroup
+
+config = CreateGroup(
+    subject="Nome do Grupo",
+    participants=["5511999999999", "5511888888888"],
+    description="Descrição do grupo"
+)
+
+response = client.group.create_group(instance_id, config, instance_token)
+```
+
+#### Atualizar Foto do Grupo
+```python
+from evolution.models.group import GroupPicture
+
+config = GroupPicture(
+    image="base64_da_imagem"
+)
+
+response = client.group.update_group_picture(instance_id, "grupo_jid", config, instance_token)
+```
+
+#### Gerenciar Participantes
+```python
+from evolution.models.group import UpdateParticipant
+
+config = UpdateParticipant(
+    action="add",  # ou "remove", "promote", "demote"
+    participants=["5511999999999"]
+)
+
+response = client.group.update_participant(instance_id, "grupo_jid", config, instance_token)
+```
+
+### Gerenciamento de Perfil
+
+#### Atualizar Nome do Perfil
+```python
+from evolution.models.profile import ProfileName
+
+config = ProfileName(
+    name="Novo Nome"
+)
+
+response = client.profile.update_profile_name(instance_id, config, instance_token)
+```
+
+#### Atualizar Status
+```python
+from evolution.models.profile import ProfileStatus
+
+config = ProfileStatus(
+    status="Novo status"
+)
+
+response = client.profile.update_profile_status(instance_id, config, instance_token)
+```
+
+#### Configurar Privacidade
+```python
+from evolution.models.profile import PrivacySettings
+
+config = PrivacySettings(
+    readreceipts="all",
+    profile="contacts",
+    status="contacts",
+    online="all",
+    last="contacts",
+    groupadd="contacts"
+)
+
+response = client.profile.update_privacy_settings(instance_id, config, instance_token)
+```
+
+### Operações de Chat
+
+#### Verificar Números WhatsApp
+```python
+from evolution.models.chat import CheckIsWhatsappNumber
+
+config = CheckIsWhatsappNumber(
+    numbers=["5511999999999", "5511888888888"]
+)
+
+response = client.chat.check_is_whatsapp_numbers(instance_id, config, instance_token)
+```
+
+#### Marcar Mensagem como Lida
+```python
+from evolution.models.chat import ReadMessage
+
+mensagem = ReadMessage(
+    remote_jid="5511999999999@s.whatsapp.net",
+    from_me=False,
+    id="mensagem_id"
+)
+
+response = client.chat.mark_message_as_read(instance_id, [mensagem], instance_token)
+```
+
+### Chamadas
+
+#### Simular Chamada
+```python
+from evolution.models.call import FakeCall
+
+config = FakeCall(
+    number="5511999999999",
+    isVideo=False,
+    callDuration=30
+)
+
+response = client.calls.fake_call(instance_id, config, instance_token)
+```
+
+### Labels
+
+#### Gerenciar Labels
+```python
+from evolution.models.label import HandleLabel
+
+config = HandleLabel(
+    number="5511999999999",
+    label_id="label_id",
+    action="add"  # ou "remove"
+)
+
+response = client.label.handle_label(instance_id, config, instance_token)
+```
