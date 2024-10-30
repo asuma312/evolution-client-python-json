@@ -1,6 +1,6 @@
 # Evolution Client Python
 
-Client Python para interagir com a API Evolution.
+Client Python para interagir com a API evolutionapi.
 
 ## Instalação
 
@@ -13,7 +13,7 @@ pip install evolutionapi
 ### Inicializando o Cliente
 
 ```python
-from evolution.client import EvolutionClient
+from evolutionapi.client import EvolutionClient
 
 client = EvolutionClient(
     base_url='http://seu-servidor:porta',
@@ -30,7 +30,7 @@ instances = client.instances.fetch_instances()
 
 #### Criar Nova Instância
 ```python
-from evolution.models.instance import InstanceConfig
+from evolutionapi.models.instance import InstanceConfig
 
 config = InstanceConfig(
     instanceName="minha-instancia",
@@ -55,7 +55,7 @@ estado = client.instance_operations.get_connection_state(instance_id, instance_t
 
 #### Definir Presença
 ```python
-from evolution.models.presence import PresenceStatus
+from evolutionapi.models.presence import PresenceStatus
 
 client.instance_operations.set_presence(
     instance_id,
@@ -68,7 +68,7 @@ client.instance_operations.set_presence(
 
 #### Mensagem de Texto
 ```python
-from evolution.models.message import TextMessage
+from evolutionapi.models.message import TextMessage
 
 mensagem = TextMessage(
     number="5511999999999",
@@ -81,7 +81,7 @@ response = client.messages.send_text(instance_id, mensagem, instance_token)
 
 #### Mensagem de Mídia
 ```python
-from evolution.models.message import MediaMessage, MediaType
+from evolutionapi.models.message import MediaMessage, MediaType
 
 mensagem = MediaMessage(
     number="5511999999999",
@@ -97,7 +97,7 @@ response = client.messages.send_media(instance_id, mensagem, instance_token)
 
 #### Mensagem com Botões
 ```python
-from evolution.models.message import ButtonMessage, Button
+from evolutionapi.models.message import ButtonMessage, Button
 
 botoes = [
     Button(
@@ -125,7 +125,7 @@ response = client.messages.send_buttons(instance_id, mensagem, instance_token)
 
 #### Mensagem com Lista
 ```python
-from evolution.models.message import ListMessage, ListSection, ListRow
+from evolutionapi.models.message import ListMessage, ListSection, ListRow
 
 rows = [
     ListRow(
@@ -161,7 +161,7 @@ response = client.messages.send_list(instance_id, mensagem, instance_token)
 
 #### Criar Grupo
 ```python
-from evolution.models.group import CreateGroup
+from evolutionapi.models.group import CreateGroup
 
 config = CreateGroup(
     subject="Nome do Grupo",
@@ -174,7 +174,7 @@ response = client.group.create_group(instance_id, config, instance_token)
 
 #### Atualizar Foto do Grupo
 ```python
-from evolution.models.group import GroupPicture
+from evolutionapi.models.group import GroupPicture
 
 config = GroupPicture(
     image="base64_da_imagem"
@@ -185,7 +185,7 @@ response = client.group.update_group_picture(instance_id, "grupo_jid", config, i
 
 #### Gerenciar Participantes
 ```python
-from evolution.models.group import UpdateParticipant
+from evolutionapi.models.group import UpdateParticipant
 
 config = UpdateParticipant(
     action="add",  # ou "remove", "promote", "demote"
@@ -199,7 +199,7 @@ response = client.group.update_participant(instance_id, "grupo_jid", config, ins
 
 #### Atualizar Nome do Perfil
 ```python
-from evolution.models.profile import ProfileName
+from evolutionapi.models.profile import ProfileName
 
 config = ProfileName(
     name="Novo Nome"
@@ -210,7 +210,7 @@ response = client.profile.update_profile_name(instance_id, config, instance_toke
 
 #### Atualizar Status
 ```python
-from evolution.models.profile import ProfileStatus
+from evolutionapi.models.profile import ProfileStatus
 
 config = ProfileStatus(
     status="Novo status"
@@ -221,7 +221,7 @@ response = client.profile.update_profile_status(instance_id, config, instance_to
 
 #### Configurar Privacidade
 ```python
-from evolution.models.profile import PrivacySettings
+from evolutionapi.models.profile import PrivacySettings
 
 config = PrivacySettings(
     readreceipts="all",
@@ -239,7 +239,7 @@ response = client.profile.update_privacy_settings(instance_id, config, instance_
 
 #### Verificar Números WhatsApp
 ```python
-from evolution.models.chat import CheckIsWhatsappNumber
+from evolutionapi.models.chat import CheckIsWhatsappNumber
 
 config = CheckIsWhatsappNumber(
     numbers=["5511999999999", "5511888888888"]
@@ -250,7 +250,7 @@ response = client.chat.check_is_whatsapp_numbers(instance_id, config, instance_t
 
 #### Marcar Mensagem como Lida
 ```python
-from evolution.models.chat import ReadMessage
+from evolutionapi.models.chat import ReadMessage
 
 mensagem = ReadMessage(
     remote_jid="5511999999999@s.whatsapp.net",
@@ -265,7 +265,7 @@ response = client.chat.mark_message_as_read(instance_id, [mensagem], instance_to
 
 #### Simular Chamada
 ```python
-from evolution.models.call import FakeCall
+from evolutionapi.models.call import FakeCall
 
 config = FakeCall(
     number="5511999999999",
@@ -280,7 +280,7 @@ response = client.calls.fake_call(instance_id, config, instance_token)
 
 #### Gerenciar Labels
 ```python
-from evolution.models.label import HandleLabel
+from evolutionapi.models.label import HandleLabel
 
 config = HandleLabel(
     number="5511999999999",
