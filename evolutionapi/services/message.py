@@ -12,42 +12,54 @@ class MessageService:
             instance_token=instance_token
         )
 
-    def send_media(self, instance_id: str, message: MediaMessage, instance_token: str, file: BinaryIO = None):
+    def send_media(self, instance_id: str, message: MediaMessage, instance_token: str, file: Union[BinaryIO, str] = None):
         payload = {
             'data': message.__dict__,
             'instance_token': instance_token
         }
         
         if file:
-            payload['files'] = {'file': file}
+            if isinstance(file, str):
+                with open(file, 'rb') as f:
+                    payload['files'] = {'file': f}
+            else:
+                payload['files'] = {'file': file}
             
         return self.client.post(
             f'message/sendMedia/{instance_id}',
             **payload
         )
 
-    def send_ptv(self, instance_id: str, message: dict, instance_token: str, file: BinaryIO = None):
+    def send_ptv(self, instance_id: str, message: dict, instance_token: str, file: Union[BinaryIO, str] = None):
         payload = {
             'data': message,
             'instance_token': instance_token
         }
         
         if file:
-            payload['files'] = {'file': file}
+            if isinstance(file, str):
+                with open(file, 'rb') as f:
+                    payload['files'] = {'file': f}
+            else:
+                payload['files'] = {'file': file}
             
         return self.client.post(
             f'message/sendPtv/{instance_id}',
             **payload
         )
 
-    def send_whatsapp_audio(self, instance_id: str, message: dict, instance_token: str, file: BinaryIO = None):
+    def send_whatsapp_audio(self, instance_id: str, message: dict, instance_token: str, file: Union[BinaryIO, str] = None):
         payload = {
             'data': message,
             'instance_token': instance_token
         }
         
         if file:
-            payload['files'] = {'file': file}
+            if isinstance(file, str):
+                with open(file, 'rb') as f:
+                    payload['files'] = {'file': f}
+            else:
+                payload['files'] = {'file': file}
             
         return self.client.post(
             f'message/sendWhatsAppAudio/{instance_id}',
