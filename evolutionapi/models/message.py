@@ -53,28 +53,34 @@ class MediaMessage(BaseMessage):
     def __init__(
         self,
         number: str,
-        mediatype: str,
-        mimetype: str,
-        caption: str,
-        media: str,
-        fileName: str,
-        delay: Optional[int] = None,
+        media: dict = None,
+        mediatype: Optional[str] = None,
+        caption: str = None,
+        mimetype: str = None,
+        fileName: str = None,
+        delay: Optional[Union[int, float, str]] = None,
         quoted: Optional[QuotedMessage] = None,
         mentionsEveryOne: Optional[bool] = None,
         mentioned: Optional[List[str]] = None
     ):
-        super().__init__(
-            number=number,
-            mediatype=mediatype,
-            mimetype=mimetype,
-            caption=caption,
-            media=media,
-            fileName=fileName,
-            delay=delay,
-            quoted=quoted.__dict__ if quoted else None,
-            mentionsEveryOne=mentionsEveryOne,
-            mentioned=mentioned
-        )
+        data = {
+            'number': number,
+            'mediatype': mediatype,
+            'caption': caption,
+            'mimetype': mimetype,
+            'fileName': fileName,
+            'quoted': quoted.__dict__ if quoted else None,
+            'mentionsEveryOne': mentionsEveryOne,
+            'mentioned': mentioned
+        }
+        
+        if delay is not None:
+            data['delay'] = delay
+        
+        if media and media != {}:
+            data['media'] = media
+            
+        super().__init__(**{k: v for k, v in data.items() if v is not None})
 
 class StatusMessage(BaseMessage):
     def __init__(

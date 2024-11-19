@@ -14,22 +14,35 @@ client = EvolutionClient(
 instance_token = "429683C4C977415CAAFCCE10F7D57E11"
 instance_id = "teste"
 
-text_message = TextMessage(
+# text_message = TextMessage(
+#     number="557499879409",
+#     text="Olá, como vai?",
+#     delay=1200
+# )
+
+# response = client.messages.send_text(instance_id, text_message, instance_token)
+
+# print("Mensagem de texto enviada")
+# print(response)
+
+media_message = MediaMessage(
     number="557499879409",
-    text="Olá, como vai?",
-    delay=1200
+    mediatype="document",
+    mimetype="application/pdf",
+    caption="Olá, como vai?",
+    fileName="arquivo.pdf"
 )
 
-response = client.messages.send_text(instance_id, text_message, instance_token)
+response = client.messages.send_media(instance_id, media_message, instance_token, "arquivo.pdf")
 
-print("Mensagem enviada")
+print("Mensagem de mídia enviada")
 print(response)
 
-print("Buscando instâncias")
-instances = client.instances.fetch_instances()
+# print("Buscando instâncias")
+# instances = client.instances.fetch_instances()
 
-print("Instâncias encontradas")
-print(instances)
+# print("Instâncias encontradas")
+# print(instances)
 
 # print("Criando instância")
 # config = InstanceConfig(
