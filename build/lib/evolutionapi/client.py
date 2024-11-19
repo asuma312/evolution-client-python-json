@@ -1,4 +1,5 @@
 import requests
+from requests_toolbelt import MultipartEncoder
 from .exceptions import EvolutionAuthenticationError, EvolutionNotFoundError, EvolutionAPIError
 from .services.instance import InstanceService
 from .services.instance_operations import InstanceOperationsService
@@ -62,11 +63,43 @@ class EvolutionClient:
         response = requests.get(url, headers=self._get_headers(instance_token))
         return self._handle_response(response)
 
-    def post(self, endpoint: str, data: dict = None, instance_token: str = None):
-        """Faz uma requisição POST."""
-        url = self._get_full_url(endpoint)
-        response = requests.post(url, headers=self._get_headers(instance_token), json=data)
-        return self._handle_response(response)
+    def post(self, endpoint: str, data: dict = None, instance_token: str = None, files: dict = None):
+        url = f'{self.base_url}/{endpoint}'
+        headers = self._get_headers(instance_token)
+        
+        if files:
+            # Remove o Content-Type do header quando enviando arquivos
+            if 'Content-Type' in headers:
+                del headers['Content-Type']
+            
+            # Prepara os campos do multipart
+            fields = {}
+            
+            # Adiciona os campos do data
+            for key, value in data.items():
+                fields[key] = str(value) if not isinstance(value, (int, float)) else (None, str(value), 'text/plain')
+            
+            # Adiciona o arquivo
+            file_tuple = files['file']
+            fields['file'] = (file_tuple[0], file_tuple[1], file_tuple[2])
+            
+            # Cria o multipart encoder
+            multipart = MultipartEncoder(fields=fields)
+            headers['Content-Type'] = multipart.content_type
+            
+            response = requests.post(
+                url, 
+                headers=headers,
+                data=multipart
+            )
+        else:
+            response = requests.post(
+                url, 
+                headers=headers, 
+                json=data
+            )
+        
+        return response.json()
 
     def put(self, endpoint, data=None):
         """Faz uma requisição PUT."""
