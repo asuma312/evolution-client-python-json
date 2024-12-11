@@ -11,6 +11,7 @@ setup(
     include_package_data=True,
     install_requires=[
         'requests>=2.25.1',
+        'requests_toolbelt>=1.0.0'
     ],
     python_requires='>=3.6',
 )
