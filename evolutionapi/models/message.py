@@ -1,11 +1,32 @@
 from enum import Enum
 from typing import List, Optional, Union
-from dataclasses import dataclass
+from evolutionapi.utils.hex_colors import HexColors
+
+class QuotedKey:
+    def __init__(self,remoteJid:str,id:str,fromMe:bool=False):
+        self.remoteJid = remoteJid
+        self.id = id
+        self.fromMe = fromMe
 
 class MediaType(Enum):
     IMAGE = "image"
     VIDEO = "video"
     DOCUMENT = "document"
+
+class MimeTypes(Enum):
+    VIDEO_MP4 = "video/mp4"
+    IMAGE_JPEG = "image/jpeg"
+    IMAGE_PNG = "image/png"
+    IMAGE_GIF = "image/gif"
+    AUDIO_OGG = "audio/ogg"
+    AUDIO_MPEG = "audio/mpeg"
+    TEXT_PLAIN = "text/plain"
+    TEXT_HTML = "text/html"
+    APPLICATION_PDF = "application/pdf"
+    APPLICATION_ZIP = "application/zip"
+
+
+
 
 class StatusType(Enum):
     TEXT = "text"
@@ -25,18 +46,20 @@ class BaseMessage:
         self.__dict__.update({k: v for k, v in kwargs.items() if v is not None})
 
 class QuotedMessage(BaseMessage):
-    def __init__(self, key: dict, message: Optional[dict] = None):
-        super().__init__(key=key, message=message)
+    def __init__(self, key: QuotedKey, message: Optional[dict] = None):
+        super().__init__(
+            key=key.__dict__,
+            message=message)
 
 class TextMessage(BaseMessage):
     def __init__(
         self,
         number: str,
         text: str,
-        delay: Optional[int] = None,
+        delay: Optional[int] = 1200,
         quoted: Optional[QuotedMessage] = None,
-        linkPreview: Optional[bool] = None,
-        mentionsEveryOne: Optional[bool] = None,
+        linkPreview: Optional[bool] = True,
+        mentionsEveryOne: Optional[bool] = False,
         mentioned: Optional[List[str]] = None
     ):
         super().__init__(
@@ -46,53 +69,52 @@ class TextMessage(BaseMessage):
             quoted=quoted.__dict__ if quoted else None,
             linkPreview=linkPreview,
             mentionsEveryOne=mentionsEveryOne,
-            mentioned=mentioned
+            mentioned=mentioned if mentioned else []
         )
 
 class MediaMessage(BaseMessage):
     def __init__(
         self,
         number: str,
-        media: dict = None,
-        mediatype: Optional[str] = None,
-        caption: str = None,
-        mimetype: str = None,
-        fileName: str = None,
-        delay: Optional[Union[int, float, str]] = None,
+        media: Union[str,bytes],
+        mediatype: Union[MediaType],
+        mimetype: MimeTypes,
+        caption: str = '',
+        fileName: str = 'file',
+        delay: Optional[Union[int, float]] = 1200,
         quoted: Optional[QuotedMessage] = None,
-        mentionsEveryOne: Optional[bool] = None,
+        mentionsEveryOne: Optional[bool] = False,
         mentioned: Optional[List[str]] = None
     ):
-        data = {
-            'number': number,
-            'mediatype': mediatype,
-            'caption': caption,
-            'mimetype': mimetype,
-            'fileName': fileName,
-            'quoted': quoted.__dict__ if quoted else None,
-            'mentionsEveryOne': mentionsEveryOne,
-            'mentioned': mentioned
-        }
-        
-        if delay is not None:
-            data['delay'] = delay
-        
-        if media and media != {}:
-            data['media'] = media
-            
-        super().__init__(**{k: v for k, v in data.items() if v is not None})
+        super().__init__(
+            number=number,
+            mediatype=mediatype.value,
+            caption=caption,
+            mimetype=mimetype.value,
+            fileName=fileName,
+            quoted=quoted.__dict__ if quoted else None,
+            mentionsEveryOne=mentionsEveryOne,
+            mentioned=mentioned if mentioned else [],
+            delay=delay,
+            media=media
+        )
 
 class StatusMessage(BaseMessage):
     def __init__(
         self,
         type: StatusType,
         content: str,
-        caption: Optional[str] = None,
-        backgroundColor: Optional[str] = None,
-        font: Optional[FontType] = None,
-        allContacts: bool = False,
-        statusJidList: Optional[List[str]] = None
+        statusJidList: Union[List[str]],
+        caption: Optional[str] = '',
+        backgroundColor: Optional[HexColors] = HexColors.WHITE,
+        font: Optional[FontType] = FontType.SERIF,
+        allContacts: bool = False
     ):
+        statusJidList = statusJidList if statusJidList else []
+        if len(statusJidList) == 0:
+            raise ValueError("statusJidList must have at least one contact")
+
+
         super().__init__(
             type=type.value,
             content=content,
@@ -111,7 +133,7 @@ class LocationMessage(BaseMessage):
         address: str,
         latitude: float,
         longitude: float,
-        delay: Optional[int] = None,
+        delay: Optional[int] = 1200,
         quoted: Optional[QuotedMessage] = None
     ):
         super().__init__(
@@ -130,9 +152,9 @@ class Contact(BaseMessage):
         fullName: str,
         wuid: str,
         phoneNumber: str,
-        organization: Optional[str] = None,
-        email: Optional[str] = None,
-        url: Optional[str] = None
+        organization: Optional[str] = '',
+        email: Optional[str] = '',
+        url: Optional[str] = ''
     ):
         super().__init__(
             fullName=fullName,
@@ -151,8 +173,10 @@ class ContactMessage(BaseMessage):
         )
 
 class ReactionMessage(BaseMessage):
-    def __init__(self, key: dict, reaction: str):
-        super().__init__(key=key, reaction=reaction)
+    def __init__(self, key: QuotedKey, reaction: str):
+        super().__init__(
+            key=key.__dict__,
+            reaction=reaction)
 
 class PollMessage(BaseMessage):
     def __init__(
@@ -161,8 +185,10 @@ class PollMessage(BaseMessage):
         name: str,
         selectableCount: int,
         values: List[str],
-        delay: Optional[int] = None,
-        quoted: Optional[QuotedMessage] = None
+        delay: Optional[int] = 1200,
+        quoted: Optional[QuotedMessage] = None,
+        mentionsEveryOne: Optional[bool] = False,
+        mentioned: Optional[List[str]] = None
     ):
         super().__init__(
             number=number,
@@ -170,7 +196,9 @@ class PollMessage(BaseMessage):
             selectableCount=selectableCount,
             values=values,
             delay=delay,
-            quoted=quoted.__dict__ if quoted else None
+            quoted=quoted.__dict__ if quoted else None,
+            mentionsEveryOne=mentionsEveryOne,
+            mentioned=mentioned if mentioned else []
         )
 
 class ListRow(BaseMessage):
@@ -197,7 +225,7 @@ class ListMessage(BaseMessage):
         buttonText: str,
         footerText: str,
         sections: List[ListSection],
-        delay: Optional[int] = None,
+        delay: Optional[int] = 1200,
         quoted: Optional[QuotedMessage] = None
     ):
         super().__init__(
@@ -216,7 +244,7 @@ class Button(BaseMessage):
         self,
         type: str,
         displayText: str,
-        id: Optional[str] = None,
+        id: str,
         copyCode: Optional[str] = None,
         url: Optional[str] = None,
         phoneNumber: Optional[str] = None,
@@ -246,7 +274,7 @@ class ButtonMessage(BaseMessage):
         description: str,
         footer: str,
         buttons: List[Button],
-        delay: Optional[int] = None,
+        delay: Optional[int] = 1200,
         quoted: Optional[QuotedMessage] = None
     ):
         super().__init__(
