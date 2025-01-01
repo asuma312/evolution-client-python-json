@@ -99,6 +99,28 @@ class MediaMessage(BaseMessage):
             media=media
         )
 
+
+class AudioMessage(BaseMessage):
+    def __init__(
+            self,
+            number: str,
+            audio: Union[str, bytes],
+            delay: Optional[int] = 1200,
+            encoding: Optional[bool] = True,
+            quoted: Optional[QuotedMessage] = None,
+            mentionsEveryOne: Optional[bool] = False,
+            mentioned: Optional[List[str]] = None
+    ):
+        super().__init__(
+            number=number,
+            audio=audio,
+            delay=delay,
+            encoding=encoding,
+            quoted=quoted.__dict__ if quoted else None,
+            mentionsEveryOne=mentionsEveryOne,
+            mentioned=mentioned if mentioned else []
+        )
+
 class StatusMessage(BaseMessage):
     def __init__(
         self,
@@ -285,4 +307,23 @@ class ButtonMessage(BaseMessage):
             buttons=[b.__dict__ for b in buttons],
             delay=delay,
             quoted=quoted.__dict__ if quoted else None
+        )
+
+class StickerMessage(BaseMessage):
+    def __init__(
+        self,
+        number: str,
+        sticker: Union[str ,bytes],
+        delay: Optional[int] = 1200,
+        quoted: Optional[QuotedMessage] = None,
+        mentionsEveryOne: Optional[bool] = False,
+        mentioned: Optional[List[str]] = None
+    ):
+        super().__init__(
+            number=number,
+            sticker=sticker,
+            delay=delay,
+            quoted=quoted.__dict__ if quoted else None,
+            mentionsEveryOne=mentionsEveryOne,
+            mentioned=mentioned if mentioned else []
         )

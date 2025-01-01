@@ -3,13 +3,20 @@ from ..models.message import *
 from requests_toolbelt import MultipartEncoder
 import mimetypes
 import requests
+import base64
+import os
+def verify_base64(data: str) -> bool or bytes:
+    try:
+        return base64.b64decode(data)
+
+    except:
+        return False
 
 class MessageService:
     def __init__(self, client):
         self.client = client
 
     def send_text(self, instance_id: str, message: TextMessage, instance_token: str):
-        # Preparar os dados como JSON
         data = {
             'number': message.number,
             'text': message.text
@@ -25,46 +32,51 @@ class MessageService:
             instance_token=instance_token
         )
 
-    def send_media(self, instance_id: str, message: MediaMessage, instance_token: str, file: Union[BinaryIO, str] = None):
+    def send_media(self, instance_id: str, message: MediaMessage, instance_token: str):
         # Preparar os dados do formulário
-        fields = {
-            'number': (None, message.number, 'text/plain'),
-            'mediatype': (None, message.mediatype, 'text/plain'),
-            'mimetype': (None, message.mimetype, 'text/plain'),
-            'caption': (None, message.caption, 'text/plain'),
-            'fileName': (None, message.fileName, 'text/plain'),
+
+        file = message.media
+        if isinstance(file, str):
+            if verify_base64(file):
+                file_data = file
+            if os.path.exists(file):
+                with open(file, 'rb') as f:
+                    file_bytes = f.read()
+                    file_data = base64.b64encode(file_bytes).decode('utf-8')
+        elif isinstance(file, bytes):
+            file_data = base64.b64encode(file).decode('utf-8')
+        else:
+            raise ValueError('O arquivo fornecido não é válido.')
+
+        data = {
+            'number': message.number,
+            'mediatype': message.mediatype,
+            'media': file_data,
+            'mimetype': message.mimetype,
+            'caption': message.caption,
+            'fileName': message.fileName
+            'delay': message.delay,
+            'mentionsEveryOne': message.mentionsEveryOne,
+            'mentions': message.mentions,
         }
-        
-        # Adicionar delay apenas se existir
-        if hasattr(message, 'delay') and message.delay is not None:
-            fields['delay'] = (None, str(message.delay), 'text/plain; type=number')
-        
-        # Adicionar o arquivo se fornecido
-        if file:
-            if isinstance(file, str):
-                mime_type = mimetypes.guess_type(file)[0] or 'application/octet-stream'
-                fields['file'] = ('file', open(file, 'rb'), mime_type)
-            else:
-                fields['file'] = ('file', file, 'application/octet-stream')
-        
-        # Criar o multipart encoder
-        multipart = MultipartEncoder(fields=fields)
-        
-        # Preparar os headers
+
+        if message.quoted:
+            data['quoted'] = message.quoted
         headers = self.client._get_headers(instance_token)
-        headers['Content-Type'] = multipart.content_type
-        
-        # Fazer a requisição diretamente
+        headers['Content-Type'] = 'application/json'
         url = f'{self.client.base_url}/message/sendMedia/{instance_id}'
         response = requests.post(
             url,
             headers=headers,
-            data=multipart
+            data=data
         )
         
         return response.json()
 
     def send_ptv(self, instance_id: str, message: dict, instance_token: str, file: Union[BinaryIO, str] = None):
+        #TODO não sei o que é isso
+
+
         fields = {}
         
         # Adiciona todos os campos do message como text/plain
@@ -89,29 +101,38 @@ class MessageService:
         response = requests.post(url, headers=headers, data=multipart)
         return response.json()
 
-    def send_whatsapp_audio(self, instance_id: str, message: dict, instance_token: str, file: Union[BinaryIO, str] = None):
-        fields = {}
-        
-        # Adiciona todos os campos do message como text/plain
-        for key, value in message.items():
-            if key == 'delay' and value is not None:
-                fields[key] = (None, str(value), 'text/plain; type=number')
-            else:
-                fields[key] = (None, str(value), 'text/plain')
-        
-        if file:
-            if isinstance(file, str):
-                mime_type = mimetypes.guess_type(file)[0] or 'application/octet-stream'
-                fields['file'] = ('file', open(file, 'rb'), mime_type)
-            else:
-                fields['file'] = ('file', file, 'application/octet-stream')
-        
-        multipart = MultipartEncoder(fields=fields)
+    def send_whatsapp_audio(self, instance_id: str, message: AudioMessage, instance_token: str):
+
+        file = message.audio
+        if isinstance(file, str):
+            if verify_base64(file):
+                file_data = file
+            if os.path.exists(file):
+                with open(file, 'rb') as f:
+                    file_bytes = f.read()
+                    file_data = base64.b64encode(file_bytes).decode('utf-8')
+        elif isinstance(file, bytes):
+            file_data = base64.b64encode(file).decode('utf-8')
+        else:
+            raise ValueError('O arquivo fornecido não é válido.')
+
+        data = {
+            'number': message.number,
+            'audio': file_data,
+            'mimetype': message.mimetype,
+            'fileName': message.fileName,
+            'delay': message.delay,
+            'encoding': message.encoding,
+            'mentionsEveryOne': message.mentionsEveryOne,
+            'mentions': message.mentions,
+        }
+        data['quoted'] = message.quoted
+
         headers = self.client._get_headers(instance_token)
-        headers['Content-Type'] = multipart.content_type
-        
+        headers['Content-Type'] = 'application/json'
+
         url = f'{self.client.base_url}/message/sendWhatsAppAudio/{instance_id}'
-        response = requests.post(url, headers=headers, data=multipart)
+        response = requests.post(url, headers=headers, data=data)
         return response.json()
 
     def send_status(self, instance_id: str, message: StatusMessage, instance_token: str):
@@ -121,29 +142,37 @@ class MessageService:
             instance_token=instance_token
         )
 
-    def send_sticker(self, instance_id: str, message: dict, instance_token: str, file: Union[BinaryIO, str] = None):
-        fields = {}
-        
-        # Adiciona todos os campos do message como text/plain
-        for key, value in message.items():
-            if key == 'delay' and value is not None:
-                fields[key] = (None, str(value), 'text/plain; type=number')
-            else:
-                fields[key] = (None, str(value), 'text/plain')
-        
-        if file:
-            if isinstance(file, str):
-                mime_type = mimetypes.guess_type(file)[0] or 'application/octet-stream'
-                fields['file'] = ('file', open(file, 'rb'), mime_type)
-            else:
-                fields['file'] = ('file', file, 'application/octet-stream')
-        
-        multipart = MultipartEncoder(fields=fields)
+    def send_sticker(self, instance_id: str, message: StickerMessage, instance_token: str, file: Union[BinaryIO, str] = None):
+        file = message.sticker
+
+        if isinstance(file, str):
+            if verify_base64(file):
+                file_data = file
+            if os.path.exists(file):
+                with open(file, 'rb') as f:
+                    file_bytes = f.read()
+                    file_data = base64.b64encode(file_bytes).decode('utf-8')
+        elif isinstance(file, bytes):
+            file_data = base64.b64encode(file).decode('utf-8')
+        else:
+            raise ValueError('O arquivo fornecido não é válido.')
+
+        data = {
+            'number': message.number,
+            'sticker': file_data,
+            'delay': message.delay,
+            'mentionsEveryOne': message.mentionsEveryOne,
+            'mentions': message.mentions,
+        }
+
+        if message.quoted:
+            data['quoted'] = message.quoted
+
         headers = self.client._get_headers(instance_token)
-        headers['Content-Type'] = multipart.content_type
+        headers['Content-Type'] = 'application/json'
         
         url = f'{self.client.base_url}/message/sendSticker/{instance_id}'
-        response = requests.post(url, headers=headers, data=multipart)
+        response = requests.post(url, headers=headers, data=data)
         return response.json()
 
     def send_location(self, instance_id: str, message: LocationMessage, instance_token: str):
