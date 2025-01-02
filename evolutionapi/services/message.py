@@ -7,7 +7,7 @@ import base64
 import os
 def verify_base64(data: str) -> bool or bytes:
     try:
-        return base64.b64decode(data)
+        return base64.b64decode(data,validate=True)
 
     except:
         return False
@@ -52,13 +52,15 @@ class MessageService:
             'number': message.number,
             'mediatype': message.mediatype,
             'media': file_data,
-            'mimetype': message.mimetype,
             'caption': message.caption,
-            'fileName': message.fileName
+            'fileName': message.fileName,
             'delay': message.delay,
             'mentionsEveryOne': message.mentionsEveryOne,
-            'mentions': message.mentions,
+            'mentions': message.mentioned,
         }
+
+        if message.mimetype:
+            data['mimetype'] = message.mimetype
 
         if message.quoted:
             data['quoted'] = message.quoted
@@ -68,7 +70,7 @@ class MessageService:
         response = requests.post(
             url,
             headers=headers,
-            data=data
+            json=data,
         )
         
         return response.json()
@@ -106,6 +108,7 @@ class MessageService:
         file = message.audio
         if isinstance(file, str):
             if verify_base64(file):
+                print("is base64")
                 file_data = file
             if os.path.exists(file):
                 with open(file, 'rb') as f:
@@ -119,20 +122,20 @@ class MessageService:
         data = {
             'number': message.number,
             'audio': file_data,
-            'mimetype': message.mimetype,
-            'fileName': message.fileName,
             'delay': message.delay,
             'encoding': message.encoding,
             'mentionsEveryOne': message.mentionsEveryOne,
-            'mentions': message.mentions,
+            'mentions': message.mentioned,
         }
-        data['quoted'] = message.quoted
+
+        if message.quoted:
+            data['quoted'] = message.quoted
 
         headers = self.client._get_headers(instance_token)
         headers['Content-Type'] = 'application/json'
 
         url = f'{self.client.base_url}/message/sendWhatsAppAudio/{instance_id}'
-        response = requests.post(url, headers=headers, data=data)
+        response = requests.post(url, headers=headers, json=data)
         return response.json()
 
     def send_status(self, instance_id: str, message: StatusMessage, instance_token: str):

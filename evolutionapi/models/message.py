@@ -1,9 +1,11 @@
 from enum import Enum
-from typing import List, Optional, Union
-from evolutionapi.utils.hex_colors import HexColors
+from typing import List, Optional, Union, Required
+from evolution_wrapper.evolutionapi.utils.hex_colors import HexColors
 
 class QuotedKey:
-    def __init__(self,remoteJid:str,id:str,fromMe:bool=False):
+    def __init__(self, remoteJid: Required[str], id: Required[str], fromMe: bool = False):
+        if remoteJid is None or id is None:
+            raise ValueError("'remoteJid' and 'id' are required and cannot be None")
         self.remoteJid = remoteJid
         self.id = id
         self.fromMe = fromMe
@@ -25,8 +27,19 @@ class MimeTypes(Enum):
     APPLICATION_PDF = "application/pdf"
     APPLICATION_ZIP = "application/zip"
 
-
-
+extensions = {
+    "mp4": MimeTypes.VIDEO_MP4,
+    "jpg": MimeTypes.IMAGE_JPEG,
+    "jpeg": MimeTypes.IMAGE_JPEG,
+    "png": MimeTypes.IMAGE_PNG,
+    "gif": MimeTypes.IMAGE_GIF,
+    "ogg": MimeTypes.AUDIO_OGG,
+    "mp3": MimeTypes.AUDIO_MPEG,
+    "txt": MimeTypes.TEXT_PLAIN,
+    "html": MimeTypes.TEXT_HTML,
+    "pdf": MimeTypes.APPLICATION_PDF,
+    "zip": MimeTypes.APPLICATION_ZIP
+}
 
 class StatusType(Enum):
     TEXT = "text"
@@ -43,10 +56,12 @@ class FontType(Enum):
 
 class BaseMessage:
     def __init__(self, **kwargs):
-        self.__dict__.update({k: v for k, v in kwargs.items() if v is not None})
+        self.__dict__.update({k: v for k, v in kwargs.items()})
 
 class QuotedMessage(BaseMessage):
-    def __init__(self, key: QuotedKey, message: Optional[dict] = None):
+    def __init__(self, key: Required[QuotedKey], message: Optional[dict] = None):
+        if key is None:
+            raise ValueError("'key' is required and cannot be None")
         super().__init__(
             key=key.__dict__,
             message=message)
@@ -54,14 +69,16 @@ class QuotedMessage(BaseMessage):
 class TextMessage(BaseMessage):
     def __init__(
         self,
-        number: str,
-        text: str,
+        number: Required[str],
+        text: Required[str],
         delay: Optional[int] = 1200,
         quoted: Optional[QuotedMessage] = None,
         linkPreview: Optional[bool] = True,
         mentionsEveryOne: Optional[bool] = False,
         mentioned: Optional[List[str]] = None
     ):
+        if number is None or text is None:
+            raise ValueError("'number' and 'text' are required and cannot be None")
         super().__init__(
             number=number,
             text=text,
@@ -75,10 +92,10 @@ class TextMessage(BaseMessage):
 class MediaMessage(BaseMessage):
     def __init__(
         self,
-        number: str,
-        media: Union[str,bytes],
-        mediatype: Union[MediaType],
-        mimetype: MimeTypes,
+        number: Required[str],
+        media: Required[Union[str, bytes]],
+        mediatype: Optional[MediaType] = None,
+        mimetype: Optional[Union[MimeTypes]] = None,
         caption: str = '',
         fileName: str = 'file',
         delay: Optional[Union[int, float]] = 1200,
@@ -86,11 +103,13 @@ class MediaMessage(BaseMessage):
         mentionsEveryOne: Optional[bool] = False,
         mentioned: Optional[List[str]] = None
     ):
+        if number is None or media is None:
+            raise ValueError("'number' and 'media' are required and cannot be None")
         super().__init__(
             number=number,
-            mediatype=mediatype.value,
+            mediatype=mediatype.value if mediatype else None,
+            mimetype=mimetype.value if mimetype else None,
             caption=caption,
-            mimetype=mimetype.value,
             fileName=fileName,
             quoted=quoted.__dict__ if quoted else None,
             mentionsEveryOne=mentionsEveryOne,
@@ -99,18 +118,19 @@ class MediaMessage(BaseMessage):
             media=media
         )
 
-
 class AudioMessage(BaseMessage):
     def __init__(
-            self,
-            number: str,
-            audio: Union[str, bytes],
-            delay: Optional[int] = 1200,
-            encoding: Optional[bool] = True,
-            quoted: Optional[QuotedMessage] = None,
-            mentionsEveryOne: Optional[bool] = False,
-            mentioned: Optional[List[str]] = None
+        self,
+        number: Required[str],
+        audio: Required[Union[str, bytes]],
+        delay: Optional[int] = 1200,
+        encoding: Optional[bool] = True,
+        quoted: Optional[QuotedMessage] = None,
+        mentionsEveryOne: Optional[bool] = False,
+        mentioned: Optional[List[str]] = None
     ):
+        if number is None or audio is None:
+            raise ValueError("'number' and 'audio' are required and cannot be None")
         super().__init__(
             number=number,
             audio=audio,
@@ -124,19 +144,16 @@ class AudioMessage(BaseMessage):
 class StatusMessage(BaseMessage):
     def __init__(
         self,
-        type: StatusType,
-        content: str,
-        statusJidList: Union[List[str]],
+        type: Required[StatusType],
+        content: Required[str],
+        statusJidList: Required[Union[List[str]]],
         caption: Optional[str] = '',
         backgroundColor: Optional[HexColors] = HexColors.WHITE,
         font: Optional[FontType] = FontType.SERIF,
         allContacts: bool = False
     ):
-        statusJidList = statusJidList if statusJidList else []
-        if len(statusJidList) == 0:
-            raise ValueError("statusJidList must have at least one contact")
-
-
+        if type is None or content is None or not statusJidList:
+            raise ValueError("'type', 'content', and 'statusJidList' are required and cannot be None")
         super().__init__(
             type=type.value,
             content=content,
@@ -150,14 +167,16 @@ class StatusMessage(BaseMessage):
 class LocationMessage(BaseMessage):
     def __init__(
         self,
-        number: str,
-        name: str,
-        address: str,
-        latitude: float,
-        longitude: float,
+        number: Required[str],
+        name: Required[str],
+        address: Required[str],
+        latitude: Required[float],
+        longitude: Required[float],
         delay: Optional[int] = 1200,
         quoted: Optional[QuotedMessage] = None
     ):
+        if number is None or name is None or address is None or latitude is None or longitude is None:
+            raise ValueError("'number', 'name', 'address', 'latitude', and 'longitude' are required and cannot be None")
         super().__init__(
             number=number,
             name=name,
@@ -171,13 +190,15 @@ class LocationMessage(BaseMessage):
 class Contact(BaseMessage):
     def __init__(
         self,
-        fullName: str,
-        wuid: str,
-        phoneNumber: str,
+        fullName: Required[str],
+        wuid: Required[str],
+        phoneNumber: Required[str],
         organization: Optional[str] = '',
         email: Optional[str] = '',
         url: Optional[str] = ''
     ):
+        if fullName is None or wuid is None or phoneNumber is None:
+            raise ValueError("'fullName', 'wuid', and 'phoneNumber' are required and cannot be None")
         super().__init__(
             fullName=fullName,
             wuid=wuid,
@@ -188,14 +209,18 @@ class Contact(BaseMessage):
         )
 
 class ContactMessage(BaseMessage):
-    def __init__(self, number: str, contact: List[Contact]):
+    def __init__(self, number: Required[str], contact: Required[List[Contact]]):
+        if number is None or not contact:
+            raise ValueError("'number' and 'contact' are required and cannot be None")
         super().__init__(
             number=number,
             contact=[c.__dict__ for c in contact]
         )
 
 class ReactionMessage(BaseMessage):
-    def __init__(self, key: QuotedKey, reaction: str):
+    def __init__(self, key: Required[QuotedKey], reaction: Required[str]):
+        if key is None or reaction is None:
+            raise ValueError("'key' and 'reaction' are required and cannot be None")
         super().__init__(
             key=key.__dict__,
             reaction=reaction)
@@ -203,15 +228,17 @@ class ReactionMessage(BaseMessage):
 class PollMessage(BaseMessage):
     def __init__(
         self,
-        number: str,
-        name: str,
-        selectableCount: int,
-        values: List[str],
+        number: Required[str],
+        name: Required[str],
+        selectableCount: Required[int],
+        values: Required[List[str]],
         delay: Optional[int] = 1200,
         quoted: Optional[QuotedMessage] = None,
         mentionsEveryOne: Optional[bool] = False,
         mentioned: Optional[List[str]] = None
     ):
+        if number is None or name is None or selectableCount is None or not values:
+            raise ValueError("'number', 'name', 'selectableCount', and 'values' are required and cannot be None")
         super().__init__(
             number=number,
             name=name,
@@ -224,7 +251,9 @@ class PollMessage(BaseMessage):
         )
 
 class ListRow(BaseMessage):
-    def __init__(self, title: str, description: str, rowId: str):
+    def __init__(self, title: Required[str], description: Required[str], rowId: Required[str]):
+        if title is None or description is None or rowId is None:
+            raise ValueError("'title', 'description', and 'rowId' are required and cannot be None")
         super().__init__(
             title=title,
             description=description,
@@ -232,7 +261,9 @@ class ListRow(BaseMessage):
         )
 
 class ListSection(BaseMessage):
-    def __init__(self, title: str, rows: List[ListRow]):
+    def __init__(self, title: Required[str], rows: Required[List[ListRow]]):
+        if title is None or not rows:
+            raise ValueError("'title' and 'rows' are required and cannot be None")
         super().__init__(
             title=title,
             rows=[r.__dict__ for r in rows]
@@ -241,15 +272,17 @@ class ListSection(BaseMessage):
 class ListMessage(BaseMessage):
     def __init__(
         self,
-        number: str,
-        title: str,
-        description: str,
-        buttonText: str,
-        footerText: str,
-        sections: List[ListSection],
+        number: Required[str],
+        title: Required[str],
+        description: Required[str],
+        buttonText: Required[str],
+        footerText: Required[str],
+        sections: Required[List[ListSection]],
         delay: Optional[int] = 1200,
         quoted: Optional[QuotedMessage] = None
     ):
+        if number is None or title is None or description is None or buttonText is None or footerText is None or not sections:
+            raise ValueError("'number', 'title', 'description', 'buttonText', 'footerText', and 'sections' are required and cannot be None")
         super().__init__(
             number=number,
             title=title,
@@ -264,9 +297,9 @@ class ListMessage(BaseMessage):
 class Button(BaseMessage):
     def __init__(
         self,
-        type: str,
-        displayText: str,
-        id: str,
+        type: Required[str],
+        displayText: Required[str],
+        id: Required[str],
         copyCode: Optional[str] = None,
         url: Optional[str] = None,
         phoneNumber: Optional[str] = None,
@@ -275,6 +308,8 @@ class Button(BaseMessage):
         keyType: Optional[str] = None,
         key: Optional[str] = None
     ):
+        if type is None or displayText is None or id is None:
+            raise ValueError("'type', 'displayText', and 'id' are required and cannot be None")
         super().__init__(
             type=type,
             displayText=displayText,
@@ -291,14 +326,16 @@ class Button(BaseMessage):
 class ButtonMessage(BaseMessage):
     def __init__(
         self,
-        number: str,
-        title: str,
-        description: str,
-        footer: str,
-        buttons: List[Button],
+        number: Required[str],
+        title: Required[str],
+        description: Required[str],
+        footer: Required[str],
+        buttons: Required[List[Button]],
         delay: Optional[int] = 1200,
         quoted: Optional[QuotedMessage] = None
     ):
+        if number is None or title is None or description is None or footer is None or not buttons:
+            raise ValueError("'number', 'title', 'description', 'footer', and 'buttons' are required and cannot be None")
         super().__init__(
             number=number,
             title=title,
@@ -312,13 +349,15 @@ class ButtonMessage(BaseMessage):
 class StickerMessage(BaseMessage):
     def __init__(
         self,
-        number: str,
-        sticker: Union[str ,bytes],
+        number: Required[str],
+        sticker: Required[Union[str ,bytes]],
         delay: Optional[int] = 1200,
         quoted: Optional[QuotedMessage] = None,
         mentionsEveryOne: Optional[bool] = False,
         mentioned: Optional[List[str]] = None
     ):
+        if number is None or sticker is None:
+            raise ValueError("'number' and 'sticker' are required and cannot be None")
         super().__init__(
             number=number,
             sticker=sticker,

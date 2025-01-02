@@ -34,6 +34,7 @@ class ProfileService:
         )
 
     def update_profile_picture(self, instance_id: str, data: ProfilePicture, instance_token: str):
+
         return self.client.post(
             f'chat/updateProfilePicture/{instance_id}',
             data=data.__dict__,
