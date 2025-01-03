@@ -1,0 +1,5 @@
+import evolution_wrapper.evolutionapi.models.return_models.instance
+import evolution_wrapper.evolutionapi.models.return_models.settings
+import evolution_wrapper.evolutionapi.models.return_models.webhook
+import evolution_wrapper.evolutionapi.models.return_models.message
+import evolution_wrapper.evolutionapi.models.return_models.groups

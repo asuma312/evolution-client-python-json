@@ -5,6 +5,7 @@ import mimetypes
 import requests
 import base64
 import os
+from ..models import return_models
 def verify_base64(data: str) -> bool or bytes:
     try:
         return base64.b64decode(data,validate=True)
@@ -16,7 +17,7 @@ class MessageService:
     def __init__(self, client):
         self.client = client
 
-    def send_text(self, instance_id: str, message: TextMessage, instance_token: str):
+    def send_text(self, instance_id: str, message: TextMessage, instance_token: str)-> return_models.message.SendMessage:
         data = {
             'number': message.number,
             'text': message.text
@@ -26,13 +27,14 @@ class MessageService:
             data['delay'] = message.delay
         
         # Usar o método post do cliente que já trata JSON corretamente
-        return self.client.post(
+        d = self.client.post(
             f'message/sendText/{instance_id}',
             data=data,
             instance_token=instance_token
         )
+        return return_models.message.SendMessage.from_dict(d)
 
-    def send_media(self, instance_id: str, message: MediaMessage, instance_token: str):
+    def send_media(self, instance_id: str, message: MediaMessage, instance_token: str)-> return_models.message.SendMedia:
         # Preparar os dados do formulário
 
         file = message.media
@@ -67,13 +69,13 @@ class MessageService:
         headers = self.client._get_headers(instance_token)
         headers['Content-Type'] = 'application/json'
         url = f'{self.client.base_url}/message/sendMedia/{instance_id}'
-        response = requests.post(
-            url,
-            headers=headers,
-            json=data,
+        d = self.client.post(
+            f'message/sendMedia/{instance_id}',
+            data=data,
+            instance_token=instance_token
         )
         
-        return response.json()
+        return return_models.message.SendMedia.from_dict(d)
 
     def send_ptv(self, instance_id: str, message: dict, instance_token: str, file: Union[BinaryIO, str] = None):
         #TODO não sei o que é isso
@@ -103,7 +105,7 @@ class MessageService:
         response = requests.post(url, headers=headers, data=multipart)
         return response.json()
 
-    def send_whatsapp_audio(self, instance_id: str, message: AudioMessage, instance_token: str):
+    def send_whatsapp_audio(self, instance_id: str, message: AudioMessage, instance_token: str)-> return_models.message.SendAudio:
 
         file = message.audio
         if isinstance(file, str):
@@ -135,16 +137,21 @@ class MessageService:
         headers['Content-Type'] = 'application/json'
 
         url = f'{self.client.base_url}/message/sendWhatsAppAudio/{instance_id}'
-        response = requests.post(url, headers=headers, json=data)
-        return response.json()
+        response = self.client.post(
+            f'message/sendWhatsAppAudio/{instance_id}',
+            data=data,
+            instance_token=instance_token
+        )
+        return return_models.message.SendAudio.from_dict(response)
 
-    def send_status(self, instance_id: str, message: StatusMessage, instance_token: str):
-        return self.client.post(
+    def send_status(self, instance_id: str, message: StatusMessage, instance_token: str)-> return_models.message.SendStatus:
+        response = self.client.post(
             f'message/sendStatus/{instance_id}',
             data=message.__dict__,
             instance_token=instance_token
         )
 
+        return return_models.message.SendStatus.from_dict(response)
     def send_sticker(self, instance_id: str, message: StickerMessage, instance_token: str, file: Union[BinaryIO, str] = None):
         file = message.sticker
 
@@ -178,52 +185,57 @@ class MessageService:
         response = requests.post(url, headers=headers, data=data)
         return response.json()
 
-    def send_location(self, instance_id: str, message: LocationMessage, instance_token: str):
+    def send_location(self, instance_id: str, message: LocationMessage, instance_token: str)-> return_models.message.SendLocation:
         data = message.__dict__.copy()
         if 'delay' in data and data['delay'] is not None:
             data['delay'] = int(data['delay'])
         
-        return self.client.post(
+        response = self.client.post(
             f'message/sendLocation/{instance_id}',
             data=data,
             instance_token=instance_token
         )
+        return return_models.message.SendLocation.from_dict(response)
 
-    def send_contact(self, instance_id: str, message: ContactMessage, instance_token: str):
-        return self.client.post(
+    def send_contact(self, instance_id: str, message: ContactMessage, instance_token: str)-> return_models.message.SendContact:
+        response = self.client.post(
             f'message/sendContact/{instance_id}',
             data=message.__dict__,
             instance_token=instance_token
         )
+        return return_models.message.SendContact.from_dict(response)
 
-    def send_reaction(self, instance_id: str, message: ReactionMessage, instance_token: str):
-        return self.client.post(
+    def send_reaction(self, instance_id: str, message: ReactionMessage, instance_token: str)-> return_models.message.SendReaction:
+        response =  self.client.post(
             f'message/sendReaction/{instance_id}',
             data=message.__dict__,
             instance_token=instance_token
         )
+        return return_models.message.SendReaction.from_dict(response)
 
-    def send_poll(self, instance_id: str, message: PollMessage, instance_token: str):
+    def send_poll(self, instance_id: str, message: PollMessage, instance_token: str)-> return_models.message.SendPoll:
         data = message.__dict__.copy()
         if 'delay' in data and data['delay'] is not None:
             data['delay'] = int(data['delay'])
         
-        return self.client.post(
+        response =  self.client.post(
             f'message/sendPoll/{instance_id}',
             data=data,
             instance_token=instance_token
         )
+        return return_models.message.SendPoll.from_dict(response)
 
-    def send_list(self, instance_id: str, message: ListMessage, instance_token: str):
+    def send_list(self, instance_id: str, message: ListMessage, instance_token: str)-> return_models.message.SendList:
         data = message.__dict__.copy()
         if 'delay' in data and data['delay'] is not None:
             data['delay'] = int(data['delay'])
         
-        return self.client.post(
+        response =  self.client.post(
             f'message/sendList/{instance_id}',
             data=data,
             instance_token=instance_token
         )
+        return return_models.message.SendList.from_dict(response)
 
     def send_buttons(self, instance_id: str, message: ButtonMessage, instance_token: str):
         data = message.__dict__.copy()
